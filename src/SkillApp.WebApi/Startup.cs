@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
+using SkillApp.Data;
 using SkillApp.DependencyResolution;
 
 namespace SkillApp.WebApi
@@ -32,6 +33,9 @@ namespace SkillApp.WebApi
         // This method gets called by the runtime. Use this method to add services to the container
         public void ConfigureServices(IServiceCollection services)
         {
+            var connection = @"Server=(LocalDb)\v11.0;Database=MyDatabase;Trusted_Connection=True;";
+            services.AddDbContext<MyDbContext>(options => options.UseSqlServer(connection));
+
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
