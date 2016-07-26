@@ -34,7 +34,9 @@ namespace SkillApp.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             var connection = @"Server=(LocalDb)\v11.0;Database=MyDatabase;Trusted_Connection=True;";
-            services.AddDbContext<MyDbContext>(options => options.UseSqlServer(connection));
+            services.AddDbContext<MyDbContext>(
+                options => options.UseSqlServer(connection,
+                    builderOptions => builderOptions.MigrationsAssembly("SkillApp.Data")));
 
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);

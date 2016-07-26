@@ -5,13 +5,12 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using SkillApp.Data;
 
-namespace SkillApp.WebApi.Migrations
+namespace SkillApp.Data.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20160722143009_Initial")]
-    partial class Initial
+    partial class MyDbContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.0-rtm-21431")
