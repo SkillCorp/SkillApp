@@ -1,4 +1,6 @@
 {
+  "userSecretsId": "aspnet-SkillApp.Web-b4643c17-1111-4b2a-ab91-bcc8ab304ed7",
+
   "dependencies": {
     "Microsoft.NETCore.App": {
       "version": "1.0.0",
@@ -23,7 +25,10 @@
     "SkillApp.BL.Interfaces": "1.0.0-*",
     "SkillApp.Data": "1.0.0-*",
     "SkillApp.DependencyResolution": "1.0.0-*",
-    "SkillApp.Entities": "1.0.0-*"
+    "SkillApp.Entities": "1.0.0-*",
+    "Microsoft.Extensions.Configuration.UserSecrets": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.Identity": "1.0.0",
+    "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "1.0.0"
   },
 
   "tools": {
