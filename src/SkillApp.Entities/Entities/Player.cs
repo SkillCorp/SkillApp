@@ -2,7 +2,9 @@
 
 namespace SkillApp.Entities.Entities
 {
-    public class Player: BaseEntity
+    public class Player : BaseEntity
     {
+        public string Name { get; set; }
+        public int Age { get; set; }
     }
 }
