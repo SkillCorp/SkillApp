@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 using SkillApp.BL.Interfaces;
 
@@ -24,6 +25,7 @@ namespace SkillApp.WebApi.Controllers
 
         // GET api/values/5
         [HttpGet("{id}")]
+        [Authorize(Policy = "Admin")]
         public string Get(int id)
         {
             return "value";
