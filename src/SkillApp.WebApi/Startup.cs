@@ -62,6 +62,10 @@ namespace SkillApp.WebApi
             services.AddCustomRepositories();
             services.AddCustomServices();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+            });
             services.AddMvc(config =>
             {
                 var policy = new AuthorizationPolicyBuilder()
@@ -97,6 +101,7 @@ namespace SkillApp.WebApi
 
             app.UseJwtBearerAuthentication(GetBearerOptions());
 
+            app.UseCors("AllowAll");
             app.UseIdentity();
             app.UseMvc();
         }
