@@ -26,7 +26,7 @@ namespace SkillApp.WebApi.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Post([FromForm] LoginUser user)
+        public async Task<IActionResult> Post([FromBody]LoginUser user)
         {
             var identity = await GetClaimsIdentity(user);
             if (identity == null)
