@@ -15,7 +15,7 @@ If one likes to apply authorized access to specific endpoint, one can do it expl
 Login request will provide us with **`access_token`**.
 
 ```bash
-curl --request POST --url http://localhost:49940/api/jwt --data UserName=Igor
+curl -X POST -H "Content-Type: application/json" -d '{UserName:"Igor",Password:""}' "http://localhost:49940/api/jwt"
 ```
 
 Something like this should show up
