@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
+using SkillApp.Data.Entities;
 using SkillApp.Entities.Entities;
 
 namespace SkillApp.Data

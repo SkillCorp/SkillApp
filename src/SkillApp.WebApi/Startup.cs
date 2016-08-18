@@ -13,9 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 
 using SkillApp.Data;
 using SkillApp.DependencyResolution;
-using SkillApp.Entities.Entities;
 using SkillApp.WebApi.Options;
-
+using SkillApp.Data.Entities;
 
 namespace SkillApp.WebApi
 {
