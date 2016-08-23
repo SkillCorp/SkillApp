@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
 
 using SkillApp.Entities.DTO.Login;
 using SkillApp.WebApi.Options;
+using SkillApp.Data.Entities;
 
 namespace SkillApp.WebApi.Controllers
 {
@@ -17,10 +20,15 @@ namespace SkillApp.WebApi.Controllers
     public class JwtController : Controller
     {
         private readonly JwtIssuerOptions _issuerOptions;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public JwtController(IOptions<JwtIssuerOptions> issuerOptions)
+        public JwtController(
+            IOptions<JwtIssuerOptions> issuerOptions,
+            UserManager<ApplicationUser> userManager)
         {
+            _userManager = userManager;
             _issuerOptions = issuerOptions.Value;
+
             ThrowIfInvalidOptions();
         }
 
@@ -29,27 +37,49 @@ namespace SkillApp.WebApi.Controllers
         public async Task<IActionResult> Post([FromBody]LoginUser user)
         {
             var identity = await GetClaimsIdentity(user);
+
             if (identity == null)
                 return BadRequest("Invalid credentials");
 
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, await _issuerOptions.JtiGenerator()),
-                new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(_issuerOptions.IssuedAt).ToString(), ClaimValueTypes.Integer64),
-                identity.FindFirst("AdminUser")
-            };
-
-            var token = GetToken(claims);
-            var encodedToken = GetEncodedToken(token);
             return new OkObjectResult(new LoginResponse
             {
-                access_token = encodedToken,
+                access_token = Encode(GetToken(identity.Claims)),
                 expires_in = (int)_issuerOptions.ValidFor.TotalSeconds
             });
         }
 
-        private JwtSecurityToken GetToken(Claim[] claims)
+        [HttpPost]
+        [Authorize(Policy = "Admin")]
+        [Route("registerAdmin")]
+        public async Task<IActionResult> RegisterAdmin([FromBody]LoginUser user)
+        {
+            var identity = new ApplicationUser { UserName = user.UserName };
+
+            var result = await _userManager.CreateAsync(identity, user.Password);
+            if (result.Succeeded)
+            {
+                var claims = await _userManager.AddClaimsAsync(identity, new[] { new Claim("AdminUser", "AdminUser") });
+                if (claims.Succeeded)
+                    return new OkResult();
+            }
+            return new BadRequestResult();
+        }
+        [HttpPost]
+        [Authorize(Policy = "Admin")]
+        [Route("registerUser")]
+        public async Task<IActionResult> RegisterUser([FromBody]LoginUser user)
+        {
+            var identity = new ApplicationUser { UserName = user.UserName };
+
+            var result = await _userManager.CreateAsync(identity, user.Password);
+            if (result.Succeeded)
+            {
+                return new OkResult();
+            }
+            return new BadRequestResult();
+        }
+
+        private JwtSecurityToken GetToken(IEnumerable<Claim> claims)
         {
             return new JwtSecurityToken(
                             issuer: _issuerOptions.Issuer,
@@ -59,7 +89,7 @@ namespace SkillApp.WebApi.Controllers
                             signingCredentials: _issuerOptions.SigningCredentials,
                             claims: claims);
         }
-        private static string GetEncodedToken(JwtSecurityToken token)
+        private static string Encode(JwtSecurityToken token)
         {
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
@@ -83,33 +113,31 @@ namespace SkillApp.WebApi.Controllers
         private static long ToUnixEpochDate(DateTime date)
           => (long)Math.Round((date.ToUniversalTime() - new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds);
 
-        /// <summary>
-        /// IMAGINE BIG RED WARNING SIGNS HERE!
-        /// You'd want to retrieve claims through your claims provider
-        /// in whatever way suits you, the below is purely for demo purposes!
-        /// </summary>
-        private static Task<ClaimsIdentity> GetClaimsIdentity(LoginUser user)
+        private async Task<ClaimsIdentity> GetClaimsIdentity(LoginUser user)
         {
-            if (user.UserName == "Igor")
-            {
-                return Task.FromResult(new ClaimsIdentity(new GenericIdentity(user.UserName, "Token"),
-                  new[]
-                  {
-                    new Claim("AdminUser", "AdminUser")
-                  }));
-            }
+            var identityUser = await _userManager.FindByNameAsync(user.UserName);
+            var identityClaims = new List<Claim>(await _userManager.GetClaimsAsync(identityUser));
+            var canLogin = await _userManager.CheckPasswordAsync(identityUser, user.Password);
 
-            if (user.UserName == "NotIgor")
-            {
-                return Task.FromResult(new ClaimsIdentity(new GenericIdentity(user.UserName, "Token"),
-                  new Claim[] { }));
-            }
+            var defaultClaims = await GetDefaultClaims(user);
 
-            return NonExistingAccountOrInvalidCredentials();
+            var claims = defaultClaims.Concat(identityClaims).ToList();
+
+            if (canLogin)
+                return new ClaimsIdentity(
+                        new GenericIdentity(user.UserName, "Token"), claims);
+            else
+                return null;
         }
-        private static Task<ClaimsIdentity> NonExistingAccountOrInvalidCredentials()
+
+        private async Task<List<Claim>> GetDefaultClaims(LoginUser user)
         {
-            return Task.FromResult<ClaimsIdentity>(null);
+            return new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, await _issuerOptions.JtiGenerator()),
+                new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(_issuerOptions.IssuedAt).ToString(), ClaimValueTypes.Integer64),
+            };
         }
     }
 }
