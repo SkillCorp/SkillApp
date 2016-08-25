@@ -51,7 +51,15 @@ namespace SkillApp.WebApi
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
                     builderOptions => builderOptions.MigrationsAssembly("SkillApp.Data")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
+            services.AddIdentity<ApplicationUser, IdentityRole>(
+                setup =>
+                {
+                    setup.Password.RequireDigit = false;
+                    setup.Password.RequireLowercase = false;
+                    setup.Password.RequireUppercase = false;
+                    setup.Password.RequireNonAlphanumeric = false;
+                    setup.Password.RequiredLength = 1;
+                })
                 .AddEntityFrameworkStores<MyDbContext>()
                 .AddDefaultTokenProviders();
 
